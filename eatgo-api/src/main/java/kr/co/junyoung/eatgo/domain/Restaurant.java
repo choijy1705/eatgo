@@ -1,8 +1,6 @@
 package kr.co.junyoung.eatgo.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.sun.istack.NotNull;
 import lombok.*;
 
 import javax.persistence.Entity;
