@@ -43,4 +43,9 @@ public class UserService {
         // TODO: 제대로 된 구현 필요함.
         return userRepository.save(user);
     }
+
+    public User authenticate(String email, String password) {
+
+        return null;
+    }
 }
