@@ -95,7 +95,7 @@ class UserServiceTests {
 
 
 
-        userService.authenticate(email, password);
+        //userService.authenticate(email, password);
 
     }
 
