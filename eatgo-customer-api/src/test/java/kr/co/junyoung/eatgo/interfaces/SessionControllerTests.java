@@ -4,6 +4,7 @@ import kr.co.junyoung.eatgo.application.EmailNotExistedException;
 import kr.co.junyoung.eatgo.application.PasswordWrongException;
 import kr.co.junyoung.eatgo.application.UserService;
 import kr.co.junyoung.eatgo.domain.User;
+import kr.co.junyoung.eatgo.utils.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +14,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.hamcrest.core.StringContains.containsString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -27,16 +28,20 @@ class SessionControllerTests {
     @Autowired
     MockMvc mvc;
 
+
     @MockBean
     private UserService userService;
 
 
     @Test
     public void createWithValidAttributes() throws Exception {
+        Long id = 1004L;
+        String name = "Tester";
+        
         String email = "tester@example.com";
         String password = "test";
 
-        User mockUser = User.builder().password("ACCESSTOKE").build();
+        User mockUser = User.builder().id(id).name(name).build();
 
         given(userService.authenticate(email, password)).willReturn(mockUser);
 
@@ -46,7 +51,8 @@ class SessionControllerTests {
                 .content("{\"email\":\"tester@example.com\",\"password\":\"test\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("location", "/session"))
-                .andExpect(content().string("{\"accessToken\":\"ACCESSTOKE\"}"));
+                .andExpect(content().string(containsString("{\"accessToken\":\"")))
+                .andExpect(content().string(containsString(".")));
 
          verify(userService).authenticate(eq(email), eq(password));
 
