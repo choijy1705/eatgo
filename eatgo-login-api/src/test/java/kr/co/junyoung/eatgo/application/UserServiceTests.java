@@ -35,34 +35,56 @@ class UserServiceTests {
         userService = new UserService(userRepository, passwordEncoder);
     }
 
-    @Test
-    public void registerUser(){
-        String email = "tester@example.com";
-        String name = "Tester";
-        String password = "test";
-        userService.registerUser(email, name, password);
 
-        verify(userRepository).save(any());
+    @Test
+    public void authenticateWithValidAttributes(){
+
+        String email = "tester@example.com";
+        String password = "test";
+
+        User mockUser = User.builder()
+                .email(email).build();
+
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(mockUser));
+
+        given(passwordEncoder.matches(any(), any())).willReturn(true);
+
+        User user = userService.authenticate(email, password);
+
+        assertThat(user.getEmail(), is(email));
     }
 
     @Test
-    public void registerUserWithExistedEmail(){
+    public void authenticateWithNotExistedEmail(){
 
-        String email = "tester@example.com";
-        String name = "Tester";
+        String email = "x@example.com";
         String password = "test";
 
-        User user = User.builder().build();
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        User mockUser = User.builder()
+                .email(email).build();
 
-        assertThatThrownBy(()->{
-            userService.registerUser(email, name, password);
-        }).isInstanceOf(EmailExistedException.class);
+        given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 
 
-        verify(userRepository, never()).save(any());
+
+        //userService.authenticate(email, password);
+
     }
 
-    
+    @Test
+    public void authenticateWithWrongPassword(){
 
+        String email = "tester@example.com";
+        String password = "x";
+
+        User mockUser = User.builder()
+                .email(email).build();
+
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(mockUser));
+
+        given(passwordEncoder.matches(any(), any())).willReturn(true);
+
+        userService.authenticate(email, password);
+
+    }
 }
