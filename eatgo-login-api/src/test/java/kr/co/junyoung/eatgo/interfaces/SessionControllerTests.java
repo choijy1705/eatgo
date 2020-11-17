@@ -20,12 +20,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.hamcrest.core.StringContains.containsString;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(SessionController.class)
@@ -48,11 +46,11 @@ class SessionControllerTests {
         String email = "tester@example.com";
         String password = "test";
 
-        User mockUser = User.builder().id(id).name(name).build();
+        User mockUser = User.builder().id(id).name(name).level(1L).build();
 
-        BDDMockito.given(userService.authenticate(email, password)).willReturn(mockUser);
+        given(userService.authenticate(email, password)).willReturn(mockUser);
 
-        BDDMockito.given(jwtUtil.createToken(id, name)).willReturn("header.payload.signature");
+        given(jwtUtil.createToken(id, name, null)).willReturn("header.payload.signature");
 
 
         mvc.perform(MockMvcRequestBuilders.post("/session")
@@ -68,8 +66,38 @@ class SessionControllerTests {
     }
 
     @Test
+    public void createRestaurantOwner() throws Exception {
+        Long id = 1004L;
+        String name = "Tester";
+
+        String email = "tester@example.com";
+        String password = "test";
+
+        User mockUser = User.builder().id(id).name(name).level(50L)
+                .restaurantId(369L)
+                .build();
+
+        given(userService.authenticate(email, password)).willReturn(mockUser);
+
+        given(jwtUtil.createToken(id, name, 369L)).willReturn("header.payload.signature");
+
+
+        mvc.perform(MockMvcRequestBuilders.post("/session")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"tester@example.com\",\"password\":\"test\"}"))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.header().string("location", "/session"))
+                .andExpect(MockMvcResultMatchers.content().string(containsString("{\"accessToken\":\"header.payload.signature\"}")));
+
+
+        Mockito.verify(userService).authenticate(ArgumentMatchers.eq(email), ArgumentMatchers.eq(password));
+
+    }
+
+
+    @Test
     public void createWithNotExistedEmail() throws Exception {
-        BDDMockito.given(userService.authenticate("x@example.com","test"))
+        given(userService.authenticate("x@example.com","test"))
                 .willThrow(EmailNotExistedException.class);
 
 
@@ -85,7 +113,7 @@ class SessionControllerTests {
 
     @Test
     public void createWithWrongPassword() throws Exception {
-        BDDMockito.given(userService.authenticate("tester@example.com","x"))
+        given(userService.authenticate("tester@example.com","x"))
                 .willThrow(PasswordWrongException.class);
 
 
